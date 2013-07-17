@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<style>
+    div { width: 800px; height: 500px; margin: auto; border: 1px solid #999; }
+    svg { width: 100%; height: 100%; stroke-width: 0.01; stroke: white; fill: #4485B6; }
+</style>
+<div></div>
+<script>
+    function point_to_string(point, origin) {
+        if (typeof origin == "undefined") origin = [0, 0];
+        return (point[0] - origin[0]) + "," + (point[1] - origin[1]);
+    }
+    function points_to_string(points, origin) {
+        return points.map(function(point) { return point_to_string(point, origin); }).join(" ");
+    }
+    
+    // http://www.public.asu.edu/~aaafp/hinged/Dudeneytrianglesquare.html
+    var root_3 = Math.sqrt(3),
+        p = (3 - Math.sqrt(4*root_3 - 3))/4,
+        np = 3/4 - p,
+        i = ( (1/4 - p) * np + 3/16 ) / ( np*np + 3/16 ),
+        e = [ p + i*np, i * root_3/4 ],
+        j = ( (1/2) * np ) / ( np*np + 3/16 ),
+        c = [ p + j*np, j * root_3/4 ];
+    
+    var svg = d3.select("div").append("svg").attr("viewBox", "-1 -0.6 3 2"),
+        outer = svg.append("g").attr("transform", "translate(0,0)");
+    outer.append("polygon").attr("id", "a").attr("points", points_to_string([
+        [1/2, root_3/2], [3/4, root_3/4], e, [1/4, root_3/4] ]));
+    
+    function polygon(name, points, within, outer_origin) {
+        if (typeof within == "undefined") within = outer;
+        var origin = points[0], translation = [origin[0], origin[1]];
+        if (typeof outer_origin != "undefined") {
+            translation[0] -= outer_origin[0];
+            translation[1] -= outer_origin[1];
+        }
+        var g = within.append("g").attr("id", name)
+            .attr("transform", "translate("+point_to_string(translation)+")")
+            .append("g").attr("class", "rotatethis").attr("transform", "rotate(0)");
+        g.append("polygon").attr("points", points_to_string(points, origin));
+        return function(name, points) {
+            return polygon(name, points, g, origin);
+        };
+    }
+    
+    polygon("b", [ [1/4, root_3/4], e, [p, 0], [0, 0] ])
+           ("c", [ [p, 0], c, [p+1/2, 0] ]);
+    polygon("d", [ [3/4, root_3/4], [1, 0], [p+1/2, 0], c ]);
+    
+    var duration = 3000;
+    function toSquare() {
+        outer.transition().duration(duration).attrTween("transform", function() {
+            return d3.interpolateString("translate(0,0) rotate(0,0.5,0.5)", "translate(0,-0.3) rotate(49,0.5,0.5)");
+        });
+        svg.selectAll("#b, #c").selectAll(".rotatethis").transition().duration(duration).attr("transform", "rotate(-180)");
+        svg.selectAll("#d").selectAll(".rotatethis").transition().duration(duration).attr("transform", "rotate(180)");
+    }
+    function toTriangle() {
+        outer.transition().duration(duration).attrTween("transform", function() {
+            return d3.interpolateString("translate(0,-0.3) rotate(49,0.5,0.5)", "translate(0,0) rotate(0,0.5,0.5)");
+        });
+        svg.selectAll("#b, #c, #d").selectAll(".rotatethis").transition().duration(duration).attr("transform", "rotate(0)");
+    }
+    
+    var triangle = true;
+    function flip() {
+        if (triangle) toSquare();
+        else toTriangle();
+        triangle = !triangle;
+    }
+    setInterval(flip, duration + 500);
+    flip();
+</script>
