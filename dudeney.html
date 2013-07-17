@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <style>
-    div { width: 800px; height: 500px; margin: auto; border: 1px solid #999; }
+    div { width: 800px; height: 500px; margin: auto; }
     svg { width: 100%; height: 100%; stroke-width: 0.01; stroke: white; fill: #4485B6; }
 </style>
 <div></div>
@@ -48,17 +48,21 @@
            ("c", [ [p, 0], c, [p+1/2, 0] ]);
     polygon("d", [ [3/4, root_3/4], [1, 0], [p+1/2, 0], c ]);
     
-    var duration = 3000;
+    var duration = 3000,
+        transforms = {
+            triangle: "translate(0,0) rotate(0,0.5,0.5)",
+            square: "translate(0,-0.3) rotate(49,0.5,0.5)"
+        };
     function toSquare() {
         outer.transition().duration(duration).attrTween("transform", function() {
-            return d3.interpolateString("translate(0,0) rotate(0,0.5,0.5)", "translate(0,-0.3) rotate(49,0.5,0.5)");
+            return d3.interpolateString(transforms.triangle, transforms.square);
         });
         svg.selectAll("#b, #c").selectAll(".rotatethis").transition().duration(duration).attr("transform", "rotate(-180)");
         svg.selectAll("#d").selectAll(".rotatethis").transition().duration(duration).attr("transform", "rotate(180)");
     }
     function toTriangle() {
         outer.transition().duration(duration).attrTween("transform", function() {
-            return d3.interpolateString("translate(0,-0.3) rotate(49,0.5,0.5)", "translate(0,0) rotate(0,0.5,0.5)");
+            return d3.interpolateString(transforms.square, transforms.triangle);
         });
         svg.selectAll("#b, #c, #d").selectAll(".rotatethis").transition().duration(duration).attr("transform", "rotate(0)");
     }
